@@ -4,4 +4,6 @@
 
 #include <SFML/System/Time.hpp>
 
+AppState StartGame();
+
 AppState Update(const AppState& state, sf::Time dt);

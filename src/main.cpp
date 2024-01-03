@@ -2,6 +2,7 @@
 
 #include "Asteroids.h"
 #include "Render.h"
+#include "Settings.h"
 
 AppState InitGameState(sf::Vector2u windowSize)
 {
@@ -24,19 +25,17 @@ bool EventLoop(sf::Window& window)
 
 int main()
 {
-    auto window = sf::RenderWindow{ sf::VideoMode{ { 1920u, 1080u } }, "Asteroids" };
+    auto window = sf::RenderWindow{ sf::VideoMode{ settings.window_size }, "Asteroids" };
     window.setVerticalSyncEnabled(true);
 
-
-    AppState state = InitGameState(window.getSize());
+    auto state = StartGame();
 
     sf::Clock clock;
     while (EventLoop(window))
     {
-        const auto dt = clock.restart();
-        auto next_state = Update(state, dt);
-        state = std::move(next_state);
-
+        state = Update(state, clock.restart());
         Draw(state, window);
     }
+
+    return 0;
 }

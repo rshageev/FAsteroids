@@ -11,7 +11,6 @@ namespace Game
 		bool accelerate = false;
 	};
 
-
 	struct Player
 	{
 		sf::Vector2f position;

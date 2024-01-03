@@ -1,6 +1,17 @@
 #include "Asteroids.h"
-
+#include "Settings.h"
 #include "game/GameLogic.h"
+
+
+AppState StartGame()
+{
+    return Game::State{
+        .player = {
+            .position = settings.field_size * 0.5f
+        }
+    };
+}
+
 
 AppState Update(const Game::State& game, sf::Time dt)
 {
