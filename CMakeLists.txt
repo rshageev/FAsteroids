@@ -10,7 +10,11 @@ FetchContent_Declare(SFML
     GIT_TAG master)
 FetchContent_MakeAvailable(SFML)
 
-add_executable(Asteroids src/main.cpp)
+add_executable(Asteroids
+    src/main.cpp
+    src/Asteroids.cpp
+    src/Render.cpp
+    src/game/GameLogic.cpp)
 target_link_libraries(Asteroids PRIVATE sfml-graphics)
 target_compile_features(Asteroids PRIVATE cxx_std_23)
 
