@@ -7,19 +7,17 @@ namespace Game
 {
 	/* Common functions */
 
-	constexpr float WrapValue(float value, float min, float max)
+	float WrapAround(float value, float min, float max)
 	{
-		const auto w = max - min;
-		while (value < min) value += w;
-		while (value > max) value -= w;
-		return value;
+		const auto rem = std::fmod(value - min, max - min);
+		return min + ((value >= min) ? rem : max - rem);
 	}
 
-	constexpr sf::Vector2f WrapPosition(sf::Vector2f position, sf::Vector2f field_size)
+	sf::Vector2f WrapPosition(sf::Vector2f position, sf::Vector2f field_size)
 	{
-		return sf::Vector2f{
-			WrapValue(position.x, 0.0f, field_size.x),
-			WrapValue(position.y, 0.0f, field_size.y)
+		return {
+			WrapAround(position.x, 0.0f, field_size.x),
+			WrapAround(position.y, 0.0f, field_size.y)
 		};
 	}
 
@@ -49,10 +47,8 @@ namespace Game
 
 	sf::Angle UpdatePlayerAngle(sf::Angle angle, const UserInput& input, sf::Time dt)
 	{
-		const auto da = settings.player.turn_speed * dt.asSeconds();
-		if (input.turn_left) angle -= da;
-		if (input.turn_right) angle += da;
-		return angle;
+		const auto sign = (input.turn_right ? 1.0f : 0.0f) - (input.turn_left ? 1.0f : 0.0f);
+		return angle + sign * settings.player.turn_speed * dt.asSeconds();
 	}
 
 	Player UpdatePlayer(const Player& player, const UserInput& input, sf::Time dt)
