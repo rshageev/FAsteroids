@@ -2,8 +2,8 @@
 
 int main()
 {
-    auto window = sf::RenderWindow{ { 1920u, 1080u }, "CMake SFML Project" };
-    window.setFramerateLimit(144);
+    auto window = sf::RenderWindow{ sf::VideoMode{ { 1920u, 1080u } }, "Asteroids" };
+    window.setVerticalSyncEnabled(true);
 
     while (window.isOpen())
     {
