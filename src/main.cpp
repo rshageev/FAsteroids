@@ -4,15 +4,6 @@
 #include "Render.h"
 #include "Settings.h"
 
-AppState InitGameState(sf::Vector2u windowSize)
-{
-    return Game::State{
-        .player = {
-            .position = sf::Vector2f{ windowSize } * 0.5f
-        }
-    };
-}
-
 bool EventLoop(sf::Window& window)
 {
     for (auto event = sf::Event{}; window.pollEvent(event);) {

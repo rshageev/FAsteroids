@@ -2,6 +2,8 @@
 
 #include <SFML/System/Vector2.hpp>
 
+#include <vector>
+
 namespace Game
 {
 	struct UserInput
@@ -19,8 +21,18 @@ namespace Game
 		float thrust = 0.0f;
 	};
 
+	struct Asteroid
+	{
+		sf::Vector2f position;
+		sf::Vector2f velocity;
+		float radius = 0.0f;
+	};
+
+	using Asteroids = std::vector<Asteroid>;
+
 	struct State
 	{
 		Player player;
+		Asteroids asteroids;
 	};
 }

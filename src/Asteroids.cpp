@@ -8,7 +8,8 @@ AppState StartGame()
     return Game::State{
         .player = {
             .position = settings.field_size * 0.5f
-        }
+        },
+        .asteroids = Game::SpawnAsteroids(8),
     };
 }
 

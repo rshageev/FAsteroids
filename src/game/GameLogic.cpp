@@ -3,6 +3,12 @@
 
 #include <SFML/Window/Keyboard.hpp>
 
+#include <random>
+#include <ranges>
+
+namespace stdr = std::ranges;
+namespace stdv = std::views;
+
 namespace Game
 {
 	/* Common functions */
@@ -13,7 +19,7 @@ namespace Game
 		return min + ((value >= min) ? rem : max - rem);
 	}
 
-	sf::Vector2f WrapPosition(sf::Vector2f position, sf::Vector2f field_size)
+	sf::Vector2f WrapAround(sf::Vector2f position, sf::Vector2f field_size)
 	{
 		return {
 			WrapAround(position.x, 0.0f, field_size.x),
@@ -21,6 +27,10 @@ namespace Game
 		};
 	}
 
+	sf::Vector2f UpdateObjectPosition(sf::Vector2f position, sf::Vector2f velocity, sf::Time dt)
+	{
+		return WrapAround(position + velocity * dt.asSeconds(), settings.field_size);
+	}
 
 	/* User input */
 
@@ -34,11 +44,6 @@ namespace Game
 	}
 	
 	/* Player */
-
-	sf::Vector2f UpdatePlayerPosition(sf::Vector2f position, sf::Vector2f velocity, sf::Time dt)
-	{
-		return WrapPosition(position + velocity * dt.asSeconds(), settings.field_size);
-	}
 
 	sf::Vector2f UpdatePlayerVelocity(sf::Vector2f velocity, sf::Angle angle, float thrust, sf::Time dt)
 	{
@@ -54,11 +59,48 @@ namespace Game
 	Player UpdatePlayer(const Player& player, const UserInput& input, sf::Time dt)
 	{
 		return {
-			.position = UpdatePlayerPosition(player.position, player.velocity, dt),
+			.position = UpdateObjectPosition(player.position, player.velocity, dt),
 			.velocity = UpdatePlayerVelocity(player.velocity, player.angle, player.thrust, dt),
 			.angle = UpdatePlayerAngle(player.angle, input, dt),
 			.thrust = input.accelerate ? settings.player.acceleration : 0.0f,
 		};
+	}
+
+	/* Asteroids */
+
+	Asteroids SpawnAsteroids(int count)
+	{
+		std::random_device rand_device;
+		std::mt19937 rng(rand_device());
+
+		std::uniform_real_distribution pos_x(0.0f, settings.field_size.x);
+		std::uniform_real_distribution pos_y(0.0f, settings.field_size.y);
+		std::uniform_real_distribution speed(settings.asteroid.speed.min, settings.asteroid.speed.max);
+		std::uniform_real_distribution angle(0.0f, 360.0f);
+		std::uniform_real_distribution radius(settings.asteroid.radius.min, settings.asteroid.radius.max);
+
+		auto spawn_asteroid = [&](int) -> Asteroid {
+			return {
+				.position = { pos_x(rng), pos_y(rng) },
+				.velocity = { speed(rng), sf::degrees(angle(rng)) },
+				.radius = radius(rng),
+			};
+		};
+
+		return stdv::iota(0, count) | stdv::transform(spawn_asteroid) | stdr::to<std::vector>();
+	}
+
+	Asteroids MoveAsteroids(const Asteroids& asteroids, sf::Time dt)
+	{
+		auto move_asteroid = [dt](const Asteroid& asteroid) -> Asteroid {
+			return {
+				.position = UpdateObjectPosition(asteroid.position, asteroid.velocity, dt),
+				.velocity = asteroid.velocity,
+				.radius = asteroid.radius,
+			};
+		};
+
+		return asteroids | stdv::transform(move_asteroid) | stdr::to<std::vector>();
 	}
 
 	/* Whole game state */
@@ -67,7 +109,8 @@ namespace Game
 	{
 		return State
 		{
-			.player = UpdatePlayer(prev_state.player, input, dt)
+			.player = UpdatePlayer(prev_state.player, input, dt),
+			.asteroids = MoveAsteroids(prev_state.asteroids, dt),
 		};
 	}
 }

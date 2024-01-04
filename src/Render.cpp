@@ -1,4 +1,5 @@
 #include "Render.h"
+#include "Settings.h"
 
 namespace
 {
@@ -32,6 +33,10 @@ namespace
 		Renderer()
 		{
 			player = CreatePlayerShape();
+
+			asteroid = sf::CircleShape(1.0f, 12u);
+			asteroid.setFillColor(sf::Color::Blue);
+			asteroid.setOrigin({ 1.0f, 1.0f });
 		}
 
 		void DrawPlayer(sf::RenderWindow& window, sf::Vector2f pos, sf::Angle angle)
@@ -41,8 +46,16 @@ namespace
 			window.draw(player);
 		}
 
+		void DrawAsteroid(sf::RenderWindow& window, sf::Vector2f pos, float radius)
+		{
+			asteroid.setPosition(pos);
+			asteroid.setScale({ radius, radius });
+			window.draw(asteroid);
+		}
+
 	private:
 		sf::ConvexShape player;
+		sf::CircleShape asteroid;
 	};
 
 	Renderer render;
@@ -51,6 +64,10 @@ namespace
 
 void Draw(const Game::State& state, sf::RenderWindow& window)
 {
+	for (const auto& asteroid : state.asteroids) {
+		render.DrawAsteroid(window, asteroid.position, asteroid.radius);
+	}
+
 	render.DrawPlayer(window, state.player.position, state.player.angle);
 }
 
