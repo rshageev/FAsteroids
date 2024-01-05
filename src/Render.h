@@ -4,4 +4,12 @@
 
 #include <SFML/Graphics.hpp>
 
-void Draw(const AppState& state, sf::RenderWindow& window);
+struct Sprites
+{
+	sf::ConvexShape player;
+	sf::CircleShape asteroid;
+};
+
+Sprites LoadResources();
+
+void Draw(sf::RenderWindow& out, const AppState& state, const Sprites& sprites);

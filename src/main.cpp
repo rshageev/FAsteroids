@@ -19,13 +19,15 @@ int main()
     auto window = sf::RenderWindow{ sf::VideoMode{ settings.window_size }, "Asteroids" };
     window.setVerticalSyncEnabled(true);
 
+    const auto resources = LoadResources();
+
     auto state = StartGame();
 
     sf::Clock clock;
     while (EventLoop(window))
     {
         state = Update(state, clock.restart());
-        Draw(state, window);
+        Draw(window, state, resources);
     }
 
     return 0;

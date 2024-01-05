@@ -27,59 +27,50 @@ namespace
 		return shape;
 	}
 
-	class Renderer
+	sf::CircleShape CreateAsteroidShape()
 	{
-	public:
-		Renderer()
-		{
-			player = CreatePlayerShape();
-
-			asteroid = sf::CircleShape(1.0f, 12u);
-			asteroid.setFillColor(sf::Color::Blue);
-			asteroid.setOrigin({ 1.0f, 1.0f });
-		}
-
-		void DrawPlayer(sf::RenderWindow& window, sf::Vector2f pos, sf::Angle angle)
-		{
-			player.setPosition(pos);
-			player.setRotation(angle);
-			window.draw(player);
-		}
-
-		void DrawAsteroid(sf::RenderWindow& window, sf::Vector2f pos, float radius)
-		{
-			asteroid.setPosition(pos);
-			asteroid.setScale({ radius, radius });
-			window.draw(asteroid);
-		}
-
-	private:
-		sf::ConvexShape player;
-		sf::CircleShape asteroid;
-	};
-
-	Renderer render;
-}
-
-
-void Draw(const Game::State& state, sf::RenderWindow& window)
-{
-	for (const auto& asteroid : state.asteroids) {
-		render.DrawAsteroid(window, asteroid.position, asteroid.radius);
+		sf::CircleShape asteroid(1.0f, 12u);
+		asteroid.setFillColor(sf::Color::Blue);
+		asteroid.setOrigin({ 1.0f, 1.0f });
+		return asteroid;
 	}
 
-	render.DrawPlayer(window, state.player.position, state.player.angle);
+	void Draw(sf::RenderTarget& target, const sf::Drawable& drawable, sf::Vector2f pos, sf::Angle angle, float scale)
+	{
+		target.draw(drawable, { sf::Transform{}
+			.translate(pos)
+			.rotate(angle)
+			.scale({ scale, scale })
+		});
+	}
 }
 
-void Draw(const Menu::State& state, sf::RenderWindow& window)
+Sprites LoadResources()
+{
+	return {
+		.player = CreatePlayerShape(),
+		.asteroid = CreateAsteroidShape(),
+	};
+}
+
+void Draw(sf::RenderWindow& out, const Game::State& state, const Sprites& sprites)
+{
+	for (const auto& asteroid : state.asteroids) {
+		Draw(out, sprites.asteroid, asteroid.position, {}, asteroid.radius);
+	}
+
+	Draw(out, sprites.player, state.player.position, state.player.angle, 1.0f);
+}
+
+void Draw(sf::RenderWindow& out, const Menu::State& state, const Sprites& sprites)
 {
 }
 
-void Draw(const AppState& state, sf::RenderWindow& window)
+void Draw(sf::RenderWindow& window, const AppState& state, const Sprites& sprites)
 {
 	window.clear();
 
-	std::visit([&](const auto& st) { Draw(st, window); }, state);
+	std::visit([&](const auto& st) { Draw(window, st, sprites); }, state);
 
 	window.display();
 }
