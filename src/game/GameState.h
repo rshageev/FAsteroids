@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/System/Vector2.hpp>
+#include <SFML/System/Time.hpp>
 
 #include <vector>
 
@@ -11,6 +12,7 @@ namespace Game
 		bool turn_left = false;
 		bool turn_right = false;
 		bool accelerate = false;
+		bool shoot = false;
 	};
 
 	struct Player
@@ -19,6 +21,7 @@ namespace Game
 		sf::Vector2f velocity;
 		sf::Angle angle;
 		float thrust = 0.0f;
+		sf::Time shoot_cooldown;
 	};
 
 	struct Asteroid
@@ -28,11 +31,20 @@ namespace Game
 		float radius = 0.0f;
 	};
 
+	struct Bullet
+	{
+		sf::Vector2f position;
+		sf::Vector2f velocity;
+		sf::Time lifetime;
+	};
+
 	using Asteroids = std::vector<Asteroid>;
+	using Bullets = std::vector<Bullet>;
 
 	struct State
 	{
 		Player player;
 		Asteroids asteroids;
+		Bullets bullets;
 	};
 }

@@ -3,12 +3,7 @@
 #include <SFML/System/Vector2.hpp>
 
 using namespace sf::Literals;
-
-struct PlayerSettings
-{
-	float acceleration = 0.0f;
-	sf::Angle turn_speed;
-};
+using namespace std::chrono_literals;
 
 template<class T>
 struct ValueRange
@@ -17,10 +12,23 @@ struct ValueRange
 	T max{};
 };
 
+struct PlayerSettings
+{
+	float acceleration = 0.0f;
+	sf::Angle turn_speed;
+	sf::Time shoot_cooldown;
+};
+
 struct AsteroidSettings
 {
 	ValueRange<float> speed;
 	ValueRange<float> radius;
+};
+
+struct BulletSettings
+{
+	float speed;
+	sf::Time lifetime;
 };
 
 struct Settings
@@ -29,6 +37,7 @@ struct Settings
 	sf::Vector2f field_size;
 	PlayerSettings player;
 	AsteroidSettings asteroid;
+	BulletSettings bullet;
 };
 
 inline constexpr auto settings = Settings
@@ -38,9 +47,14 @@ inline constexpr auto settings = Settings
 	.player = {
 		.acceleration = 60.0f,
 		.turn_speed = 120_deg,
+		.shoot_cooldown = 150ms,
 	},
 	.asteroid = {
 		.speed = { 0.0f, 50.0f },
 		.radius = { 15.0f, 20.0f },
+	},
+	.bullet = {
+		.speed = 320.0f,
+		.lifetime = 3s,
 	},
 };

@@ -8,6 +8,7 @@ struct Sprites
 {
 	sf::ConvexShape player;
 	sf::CircleShape asteroid;
+	sf::RectangleShape bullet;
 };
 
 Sprites LoadResources();

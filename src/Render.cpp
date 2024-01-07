@@ -35,7 +35,15 @@ namespace
 		return asteroid;
 	}
 
-	void Draw(sf::RenderTarget& target, const sf::Drawable& drawable, sf::Vector2f pos, sf::Angle angle, float scale)
+	sf::RectangleShape CreateBulletShape()
+	{
+		sf::RectangleShape bullet({ 4.0f, 4.0f });
+		bullet.setFillColor(sf::Color::White);
+		bullet.setOrigin({ 2.0f, 2.0f });
+		return bullet;
+	}
+
+	void Draw(sf::RenderTarget& target, const sf::Drawable& drawable, sf::Vector2f pos, float scale = 1.0f, sf::Angle angle = sf::degrees(0.0f))
 	{
 		target.draw(drawable, { sf::Transform{}
 			.translate(pos)
@@ -50,16 +58,21 @@ Sprites LoadResources()
 	return {
 		.player = CreatePlayerShape(),
 		.asteroid = CreateAsteroidShape(),
+		.bullet = CreateBulletShape(),
 	};
 }
 
 void Draw(sf::RenderWindow& out, const Game::State& state, const Sprites& sprites)
 {
 	for (const auto& asteroid : state.asteroids) {
-		Draw(out, sprites.asteroid, asteroid.position, {}, asteroid.radius);
+		Draw(out, sprites.asteroid, asteroid.position, asteroid.radius);
 	}
 
-	Draw(out, sprites.player, state.player.position, state.player.angle, 1.0f);
+	for (const auto& bullet : state.bullets) {
+		Draw(out, sprites.bullet, bullet.position);
+	}
+
+	Draw(out, sprites.player, state.player.position, 1.0f, state.player.angle);
 }
 
 void Draw(sf::RenderWindow& out, const Menu::State& state, const Sprites& sprites)

@@ -40,6 +40,7 @@ namespace Game
 			.turn_left = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left),
 			.turn_right = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right),
 			.accelerate = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up),
+			.shoot = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space),
 		};
 	}
 	
@@ -56,6 +57,17 @@ namespace Game
 		return angle + sign * settings.player.turn_speed * dt.asSeconds();
 	}
 
+	sf::Time UpdatePlayerShootCooldown(const Player& player, const UserInput& input, sf::Time dt)
+	{
+		if (player.shoot_cooldown > sf::Time::Zero) {	
+			return player.shoot_cooldown - dt; // on cooldown
+		}
+		else if (input.shoot) {
+			return settings.player.shoot_cooldown; // set cooldown when shooting
+		}
+		return player.shoot_cooldown; // not on cd, not shooting
+	}
+
 	Player UpdatePlayer(const Player& player, const UserInput& input, sf::Time dt)
 	{
 		return {
@@ -63,6 +75,7 @@ namespace Game
 			.velocity = UpdatePlayerVelocity(player.velocity, player.angle, player.thrust, dt),
 			.angle = UpdatePlayerAngle(player.angle, input, dt),
 			.thrust = input.accelerate ? settings.player.acceleration : 0.0f,
+			.shoot_cooldown = UpdatePlayerShootCooldown(player, input, dt),
 		};
 	}
 
@@ -90,7 +103,7 @@ namespace Game
 		return stdv::iota(0, count) | stdv::transform(spawn_asteroid) | stdr::to<std::vector>();
 	}
 
-	Asteroids MoveAsteroids(const Asteroids& asteroids, sf::Time dt)
+	auto MoveAsteroids(const Asteroids& asteroids, sf::Time dt)
 	{
 		auto move_asteroid = [dt](const Asteroid& asteroid) -> Asteroid {
 			return {
@@ -100,7 +113,44 @@ namespace Game
 			};
 		};
 
-		return asteroids | stdv::transform(move_asteroid) | stdr::to<std::vector>();
+		return asteroids | stdv::transform(move_asteroid) ;
+	}
+
+	/* Bullets */
+	Bullet ShootBullet(const Player& player)
+	{
+		return {
+			.position = player.position,
+			.velocity = { settings.bullet.speed, player.angle },
+			.lifetime = settings.bullet.lifetime,
+		};
+	}
+
+	Bullets ShootBullets(auto&& bullets, const Player& player, const UserInput& input)
+	{
+		Bullets out;
+		out.append_range(bullets);
+		if (player.shoot_cooldown <= sf::Time::Zero && input.shoot) {
+			out.push_back(ShootBullet(player));
+		}
+		return out;
+	}
+
+	auto UpdateBullets(const auto& bullets, sf::Time dt)
+	{
+		auto update_bullet = [dt](const Bullet& bullet) -> Bullet {
+			return {
+				.position = UpdateObjectPosition(bullet.position, bullet.velocity, dt),
+				.velocity = bullet.velocity,
+				.lifetime = bullet.lifetime - dt,
+			};
+		};
+
+		auto bullet_alive = [](const Bullet& bullet) -> bool {
+			return bullet.lifetime > sf::Time::Zero;
+		};
+
+		return bullets | stdv::filter(bullet_alive) | stdv::transform(update_bullet);
 	}
 
 	/* Whole game state */
@@ -110,7 +160,8 @@ namespace Game
 		return State
 		{
 			.player = UpdatePlayer(prev_state.player, input, dt),
-			.asteroids = MoveAsteroids(prev_state.asteroids, dt),
+			.asteroids = MoveAsteroids(prev_state.asteroids, dt) | stdr::to<std::vector>(),
+			.bullets = ShootBullets(UpdateBullets(prev_state.bullets, dt), prev_state.player, input),
 		};
 	}
 }
