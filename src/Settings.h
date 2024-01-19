@@ -51,7 +51,7 @@ inline constexpr auto settings = Settings
 	},
 	.asteroid = {
 		.speed = { 0.0f, 50.0f },
-		.radius = { 15.0f, 20.0f },
+		.radius = { 20.0f, 30.0f },
 	},
 	.bullet = {
 		.speed = 320.0f,
