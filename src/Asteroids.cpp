@@ -13,18 +13,12 @@ AppState StartGame()
     };
 }
 
-
-AppState Update(const Game::State& game, sf::Time dt)
-{
-    return Game::Update(game, Game::GetUserInput(), dt);
-}
-
-AppState Update(const Menu::State& menu, sf::Time dt)
+AppState Update(const Menu::State& menu, const FrameData& frame)
 {
     return menu;
 }
 
-AppState Update(const AppState& state, sf::Time dt)
+AppState Update(const AppState& state, const FrameData& frame)
 {
-    return std::visit([dt](const auto& st) { return Update(st, dt); }, state);
+    return std::visit([&](const auto& st) { return Update(st, frame); }, state);
 }

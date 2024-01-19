@@ -6,4 +6,4 @@
 
 AppState StartGame();
 
-AppState Update(const AppState& state, sf::Time dt);
+AppState Update(const AppState& state, const FrameData& frame);

@@ -4,14 +4,24 @@
 #include "Render.h"
 #include "Settings.h"
 
-bool EventLoop(sf::Window& window)
+FrameData UpdateFrame(FrameData frame, sf::Window& window, sf::Clock& clock)
 {
-    for (auto event = sf::Event{}; window.pollEvent(event);) {
+    for (auto event = sf::Event{}; window.pollEvent(event);)
+    {
         if (event.type == sf::Event::Closed) {
             window.close();
         }
+        if (event.type == sf::Event::KeyPressed) {
+            frame.keys.insert(event.key.code);
+        }
+        if (event.type == sf::Event::KeyReleased) {
+            frame.keys.erase(event.key.code);
+        }
     }
-    return window.isOpen();
+
+    frame.dt = clock.restart();
+
+    return frame;
 }
 
 int main()
@@ -22,11 +32,13 @@ int main()
     const auto resources = LoadResources();
 
     auto state = StartGame();
-
+    auto frame = FrameData{};
     sf::Clock clock;
-    while (EventLoop(window))
+
+    while (window.isOpen())
     {
-        state = Update(state, clock.restart());
+        frame = UpdateFrame(frame, window, clock);
+        state = Update(state, frame);
         Draw(window, state, resources);
     }
 

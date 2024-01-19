@@ -1,8 +1,6 @@
 #include "GameLogic.h"
 #include "../Settings.h"
 
-#include <SFML/Window/Keyboard.hpp>
-
 #include <random>
 #include <ranges>
 
@@ -11,6 +9,13 @@ namespace stdv = std::views;
 
 namespace Game
 {
+	template<class T>
+	concept GameObject = requires (T obj) {
+		{ obj.position } -> std::convertible_to<sf::Vector2f>;
+		{ obj.velocity } -> std::convertible_to<sf::Vector2f>;
+	};
+
+
 	/* Common functions */
 
 	float WrapAround(float value, float min, float max)
@@ -27,20 +32,20 @@ namespace Game
 		};
 	}
 
-	sf::Vector2f UpdateObjectPosition(sf::Vector2f position, sf::Vector2f velocity, sf::Time dt)
+	sf::Vector2f UpdateObjectPosition(const GameObject auto& obj, sf::Time dt)
 	{
-		return WrapAround(position + velocity * dt.asSeconds(), settings.field_size);
+		return WrapAround(obj.position + obj.velocity * dt.asSeconds(), settings.field_size);
 	}
 
 	/* User input */
 
-	UserInput GetUserInput()
+	UserInput GetUserInput(const FrameData& frame)
 	{
 		return {
-			.turn_left = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left),
-			.turn_right = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right),
-			.accelerate = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up),
-			.shoot = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space),
+			.turn_left = frame.keys.contains(sf::Keyboard::Key::Left),
+			.turn_right = frame.keys.contains(sf::Keyboard::Key::Right),
+			.accelerate = frame.keys.contains(sf::Keyboard::Key::Up),
+			.shoot = frame.keys.contains(sf::Keyboard::Key::Space),
 		};
 	}
 	
@@ -71,7 +76,7 @@ namespace Game
 	Player UpdatePlayer(const Player& player, const UserInput& input, sf::Time dt)
 	{
 		return {
-			.position = UpdateObjectPosition(player.position, player.velocity, dt),
+			.position = UpdateObjectPosition(player, dt),
 			.velocity = UpdatePlayerVelocity(player.velocity, player.angle, player.thrust, dt),
 			.angle = UpdatePlayerAngle(player.angle, input, dt),
 			.thrust = input.accelerate ? settings.player.acceleration : 0.0f,
@@ -107,7 +112,7 @@ namespace Game
 	{
 		auto move_asteroid = [dt](const Asteroid& asteroid) -> Asteroid {
 			return {
-				.position = UpdateObjectPosition(asteroid.position, asteroid.velocity, dt),
+				.position = UpdateObjectPosition(asteroid, dt),
 				.velocity = asteroid.velocity,
 				.radius = asteroid.radius,
 			};
@@ -140,7 +145,7 @@ namespace Game
 	{
 		auto update_bullet = [dt](const Bullet& bullet) -> Bullet {
 			return {
-				.position = UpdateObjectPosition(bullet.position, bullet.velocity, dt),
+				.position = UpdateObjectPosition(bullet, dt),
 				.velocity = bullet.velocity,
 				.lifetime = bullet.lifetime - dt,
 			};
@@ -155,13 +160,15 @@ namespace Game
 
 	/* Whole game state */
 
-	AppState Update(const State& prev_state, UserInput input, sf::Time dt)
+	AppState Update(const State& prev_state, const FrameData& frame)
 	{
+		const auto input = GetUserInput(frame);
+
 		return State
 		{
-			.player = UpdatePlayer(prev_state.player, input, dt),
-			.asteroids = MoveAsteroids(prev_state.asteroids, dt) | stdr::to<std::vector>(),
-			.bullets = ShootBullets(UpdateBullets(prev_state.bullets, dt), prev_state.player, input),
+			.player = UpdatePlayer(prev_state.player, input, frame.dt),
+			.asteroids = MoveAsteroids(prev_state.asteroids, frame.dt) | stdr::to<std::vector>(),
+			.bullets = ShootBullets(UpdateBullets(prev_state.bullets, frame.dt), prev_state.player, input),
 		};
 	}
 }
