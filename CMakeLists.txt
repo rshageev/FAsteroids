@@ -15,6 +15,7 @@ add_executable(Asteroids
     src/Asteroids.cpp
     src/Render.cpp
     src/game/GameLogic.cpp
+    src/game/Collisions.cpp
     src/menu/MenuLogic.cpp)
 target_include_directories(Asteroids PRIVATE src)
 target_link_libraries(Asteroids PRIVATE sfml-graphics)

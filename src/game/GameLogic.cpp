@@ -1,11 +1,9 @@
 #include "GameLogic.h"
 #include "Settings.h"
+#include "Utils.h"
+#include "Collisions.h"
 
 #include <random>
-#include <ranges>
-
-namespace stdr = std::ranges;
-namespace stdv = std::views;
 
 namespace Game
 {
@@ -15,66 +13,53 @@ namespace Game
 		{ obj.velocity } -> std::convertible_to<sf::Vector2f>;
 	};
 
-	template<class R, class V>
-	concept range_of = stdr::range<R> && std::convertible_to<stdr::range_value_t<R>, V>;
-
-
 	/* Common functions */
 
-	float WrapAround(float value, float min, float max)
+	auto WrapAround(float value, float min, float max) -> float
 	{
 		const auto rem = std::fmod(value - min, max - min);
 		return min + ((value >= min) ? rem : max - rem);
 	}
 
-	sf::Vector2f WrapAround(sf::Vector2f position, sf::Vector2f field_size)
+	auto WrapAround(sf::Vector2f position, sf::Vector2f field_size)
 	{
-		return {
+		return sf::Vector2f{
 			WrapAround(position.x, 0.0f, field_size.x),
 			WrapAround(position.y, 0.0f, field_size.y)
 		};
 	}
 
-	sf::Vector2f UpdateObjectPosition(const GameObject auto& obj, sf::Time dt)
+	auto UpdateObjectPosition(const GameObject auto& obj, sf::Time dt)
 	{
 		return WrapAround(obj.position + obj.velocity * dt.asSeconds(), settings.field_size);
 	}
 
 	/* User input */
 
-	UserInput GetUserInput(const FrameData& frame)
+	auto GetUserInput(const FrameData& frame)
 	{
-		return {
+		return UserInput{
 			.turn_left = frame.keys.contains(sf::Keyboard::Key::Left),
 			.turn_right = frame.keys.contains(sf::Keyboard::Key::Right),
 			.accelerate = frame.keys.contains(sf::Keyboard::Key::Up),
 			.shoot = frame.keys.contains(sf::Keyboard::Key::Space),
 		};
 	}
-
-	/* Collisions */
-
-	struct CollisionsData
-	{
-		std::vector<bool> asteroids;
-		std::vector<bool> bullets;
-	};
-
 	
 	/* Player */
 
-	sf::Vector2f UpdatePlayerVelocity(sf::Vector2f velocity, sf::Angle angle, float thrust, sf::Time dt)
+	auto UpdatePlayerVelocity(sf::Vector2f velocity, sf::Angle angle, float thrust, sf::Time dt)
 	{
 		return velocity + sf::Vector2f{ thrust, angle } * dt.asSeconds();
 	}
 
-	sf::Angle UpdatePlayerAngle(sf::Angle angle, const UserInput& input, sf::Time dt)
+	auto UpdatePlayerAngle(sf::Angle angle, const UserInput& input, sf::Time dt)
 	{
 		const auto sign = (input.turn_right ? 1.0f : 0.0f) - (input.turn_left ? 1.0f : 0.0f);
 		return angle + sign * settings.player.turn_speed * dt.asSeconds();
 	}
 
-	sf::Time UpdatePlayerShootCooldown(const Player& player, const UserInput& input, sf::Time dt)
+	auto UpdatePlayerShootCooldown(const Player& player, const UserInput& input, sf::Time dt)
 	{
 		if (player.shoot_cooldown > sf::Time::Zero) {	
 			return player.shoot_cooldown - dt; // on cd: update cooldown timer
@@ -85,9 +70,9 @@ namespace Game
 		return player.shoot_cooldown; // not on cd, not shooting
 	}
 
-	Player UpdatePlayer(const Player& player, const UserInput& input, sf::Time dt)
+	auto UpdatePlayer(const Player& player, const UserInput& input, sf::Time dt)
 	{
-		return {
+		return Player{
 			.position = UpdateObjectPosition(player, dt),
 			.velocity = UpdatePlayerVelocity(player.velocity, player.angle, player.thrust, dt),
 			.angle = UpdatePlayerAngle(player.angle, input, dt),
@@ -98,7 +83,7 @@ namespace Game
 
 	/* Asteroids */
 
-	Asteroids SpawnAsteroids(int count)
+	auto SpawnAsteroids(int count) -> Asteroids
 	{
 		std::random_device rand_device;
 		std::mt19937 rng(rand_device());
@@ -184,46 +169,13 @@ namespace Game
 			| stdv::transform(update_bullet); // move remaining bullets and update their lifetimes
 	}
 
-	/* Collisions */
-
-	bool Collides(const Asteroid& asteroid, const Bullet& bullet)
-	{
-		return (asteroid.position - bullet.position).length() <= asteroid.radius;
-	}
-
-	CollisionsData CalcAsteroidBulletCollisions(const State& prev_state)
-	{
-		// process all [asteroid, bullet] pairs along with their indices
-		auto ab_pairs = stdv::cartesian_product(prev_state.asteroids | stdv::enumerate, prev_state.bullets | stdv::enumerate);
-
-		auto cd = CollisionsData{
-			.asteroids = std::vector<bool>(prev_state.asteroids.size(), false),
-			.bullets = std::vector<bool>(prev_state.bullets.size(), false),
-		};
-
-		auto add_collision = [](CollisionsData cd, const auto& ab) {
-			// ab is a tuple of tuples, so we need to destructure the whole thing
-			const auto& [ia, ib] = ab;
-			const auto& [aidx, asteroid] = ia;
-			const auto& [bidx, bullet] = ib;
-
-			if (Collides(asteroid, bullet)) {
-				cd.asteroids[aidx] = true;
-				cd.bullets[bidx] = true;
-			}
-			return cd;
-		};
-
-		return stdr::fold_left(ab_pairs, std::move(cd), add_collision);
-	}
-
 	/* Whole game state */
 
 	AppState Update(const State& prev_state, const FrameData& frame)
 	{
 		const auto input = GetUserInput(frame);
 
-		const auto collisions = CalcAsteroidBulletCollisions(prev_state);
+		const auto collisions = CalcAllCollisions(prev_state);
 
 		return State
 		{
