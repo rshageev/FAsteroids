@@ -43,6 +43,13 @@ namespace
 		return bullet;
 	}
 
+	sf::Font LoadFont(const std::filesystem::path& path)
+	{
+		sf::Font font;
+		[[maybe_unused]] const bool ok = font.loadFromFile(path);
+		return font;
+	}
+
 	void Draw(sf::RenderTarget& target, const sf::Drawable& drawable, sf::Vector2f pos, float scale = 1.0f, sf::Angle angle = sf::degrees(0.0f))
 	{
 		target.draw(drawable, { sf::Transform{}
@@ -50,6 +57,14 @@ namespace
 			.rotate(angle)
 			.scale({ scale, scale })
 		});
+	}
+
+	void PrintText(sf::RenderTarget& target, const sf::Font& font, const sf::String& string, sf::Vector2f position, unsigned int size, sf::Color color = sf::Color::White)
+	{
+		sf::Text text(font, string, size);
+		text.setPosition(position);
+		text.setFillColor(color);
+		target.draw(text);
 	}
 }
 
@@ -59,6 +74,7 @@ Sprites LoadResources()
 		.player = CreatePlayerShape(),
 		.asteroid = CreateAsteroidShape(),
 		.bullet = CreateBulletShape(),
+		.font = LoadFont("res/AstroSpace.ttf"),
 	};
 }
 
@@ -75,8 +91,11 @@ void Draw(sf::RenderWindow& out, const Game::State& state, const Sprites& sprite
 	Draw(out, sprites.player, state.player.position, 1.0f, state.player.angle);
 }
 
-void Draw(sf::RenderWindow& out, const Menu::State& state, const Sprites& sprites)
+void Draw(sf::RenderWindow& window, const Menu::State& state, const Sprites& sprites)
 {
+	PrintText(window, sprites.font, "Asteroids", { 100.0f, 100.0f }, 64);
+
+	PrintText(window, sprites.font, "Press any key to play", { 100.0f, 250.0f }, 24, sf::Color(200, 200, 200));
 }
 
 void Draw(sf::RenderWindow& window, const AppState& state, const Sprites& sprites)

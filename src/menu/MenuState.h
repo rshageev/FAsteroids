@@ -2,6 +2,5 @@
 
 namespace Menu
 {
-	struct UserInput {};
 	struct State {};
 }

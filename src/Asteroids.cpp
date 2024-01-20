@@ -1,7 +1,7 @@
 #include "Asteroids.h"
 #include "Settings.h"
 #include "game/GameLogic.h"
-
+#include "menu/MenuLogic.h"
 
 AppState StartGame()
 {
@@ -13,9 +13,9 @@ AppState StartGame()
     };
 }
 
-AppState Update(const Menu::State& menu, const FrameData& frame)
+AppState GoToMenu()
 {
-    return menu;
+    return Menu::State{};
 }
 
 AppState Update(const AppState& state, const FrameData& frame)

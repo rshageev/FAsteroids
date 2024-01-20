@@ -14,9 +14,16 @@ add_executable(Asteroids
     src/main.cpp
     src/Asteroids.cpp
     src/Render.cpp
-    src/game/GameLogic.cpp)
+    src/game/GameLogic.cpp
+    src/menu/MenuLogic.cpp)
 target_link_libraries(Asteroids PRIVATE sfml-graphics)
 target_compile_features(Asteroids PRIVATE cxx_std_23)
+
+add_custom_command(
+    TARGET Asteroids
+    COMMENT "Copy game resources"
+    POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/res $<TARGET_FILE_DIR:Asteroids>/res
+)
 
 if(WIN32)
     add_custom_command(

@@ -2,9 +2,7 @@
 
 #include "../AppState.h"
 
-namespace Game
+namespace Menu
 {
-	Asteroids SpawnAsteroids(int count);
-
 	AppState Update(const State& state, const FrameData& frame);
 }

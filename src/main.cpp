@@ -31,7 +31,7 @@ int main()
 
     const auto resources = LoadResources();
 
-    auto state = StartGame();
+    auto state = GoToMenu();// StartGame();
     auto frame = FrameData{};
     sf::Clock clock;
 
