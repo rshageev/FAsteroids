@@ -4,7 +4,7 @@
 
 #include <SFML/Graphics.hpp>
 
-struct Sprites
+struct Resources
 {
 	sf::ConvexShape player;
 	sf::CircleShape asteroid;
@@ -12,6 +12,6 @@ struct Sprites
 	sf::Font font;
 };
 
-Sprites LoadResources();
+Resources LoadResources();
 
-void Draw(sf::RenderWindow& out, const AppState& state, const Sprites& sprites);
+void Draw(sf::RenderWindow& out, const AppState& state, const Resources& res);

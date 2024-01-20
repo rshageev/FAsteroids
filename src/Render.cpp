@@ -68,7 +68,7 @@ namespace
 	}
 }
 
-Sprites LoadResources()
+Resources LoadResources()
 {
 	return {
 		.player = CreatePlayerShape(),
@@ -78,31 +78,31 @@ Sprites LoadResources()
 	};
 }
 
-void Draw(sf::RenderWindow& out, const Game::State& state, const Sprites& sprites)
+void Draw(sf::RenderWindow& out, const Game::State& state, const Resources& res)
 {
 	for (const auto& asteroid : state.asteroids) {
-		Draw(out, sprites.asteroid, asteroid.position, asteroid.radius);
+		Draw(out, res.asteroid, asteroid.position, asteroid.radius);
 	}
 
 	for (const auto& bullet : state.bullets) {
-		Draw(out, sprites.bullet, bullet.position);
+		Draw(out, res.bullet, bullet.position);
 	}
 
-	Draw(out, sprites.player, state.player.position, 1.0f, state.player.angle);
+	Draw(out, res.player, state.player.position, 1.0f, state.player.angle);
 }
 
-void Draw(sf::RenderWindow& window, const Menu::State& state, const Sprites& sprites)
+void Draw(sf::RenderWindow& window, const Menu::State& state, const Resources& res)
 {
-	PrintText(window, sprites.font, "Asteroids", { 100.0f, 100.0f }, 64);
+	PrintText(window, res.font, "Asteroids", { 100.0f, 100.0f }, 64);
 
-	PrintText(window, sprites.font, "Press any key to play", { 100.0f, 250.0f }, 24, sf::Color(200, 200, 200));
+	PrintText(window, res.font, "Press any key to play", { 100.0f, 250.0f }, 24, sf::Color(200, 200, 200));
 }
 
-void Draw(sf::RenderWindow& window, const AppState& state, const Sprites& sprites)
+void Draw(sf::RenderWindow& window, const AppState& state, const Resources& res)
 {
 	window.clear();
 
-	std::visit([&](const auto& st) { Draw(window, st, sprites); }, state);
+	std::visit([&](const auto& st) { Draw(window, st, res); }, state);
 
 	window.display();
 }
