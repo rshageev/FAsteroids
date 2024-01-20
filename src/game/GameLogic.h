@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../AppState.h"
+#include "AppState.h"
 
 namespace Game
 {

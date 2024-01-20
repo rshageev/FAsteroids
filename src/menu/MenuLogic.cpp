@@ -1,5 +1,5 @@
 #include "MenuLogic.h"
-#include "../Asteroids.h"
+#include "Asteroids.h"
 
 namespace Menu
 {
