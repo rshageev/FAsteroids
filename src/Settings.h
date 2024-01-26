@@ -23,6 +23,7 @@ struct PlayerSettings
 struct AsteroidSettings
 {
 	ValueRange<float> speed;
+	ValueRange<sf::Angle> rot_speed;
 };
 
 struct BulletSettings
@@ -51,6 +52,7 @@ inline constexpr auto settings = Settings
 	},
 	.asteroid = {
 		.speed = { 10.0f, 50.0f },
+		.rot_speed = { -20_deg, 20_deg },
 	},
 	.bullet = {
 		.speed = 320.0f,

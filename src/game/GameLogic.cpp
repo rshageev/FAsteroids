@@ -92,12 +92,14 @@ namespace Game
 		std::uniform_real_distribution pos_y(0.0f, settings.field_size.y);
 		std::uniform_real_distribution speed(settings.asteroid.speed.min, settings.asteroid.speed.max);
 		std::uniform_real_distribution angle(0.0f, 360.0f);
+		std::uniform_real_distribution rot_speed(settings.asteroid.rot_speed.min.asDegrees(), settings.asteroid.rot_speed.max.asDegrees());
 
 		auto spawn_asteroid = [&](int) -> Asteroid {
 			return {
 				.position = { pos_x(rng), pos_y(rng) },
 				.velocity = { speed(rng), sf::degrees(angle(rng)) },
 				.angle = sf::degrees(angle(rng)),
+				.rot_speed = sf::degrees(rot_speed(rng)),
 			};
 		};
 
@@ -111,7 +113,8 @@ namespace Game
 			return {
 				.position = UpdateObjectPosition(asteroid, dt),
 				.velocity = asteroid.velocity,
-				.angle = asteroid.angle,
+				.angle = (asteroid.angle + asteroid.rot_speed * dt.asSeconds()).wrapSigned(),
+				.rot_speed = asteroid.rot_speed,
 			};
 		};
 

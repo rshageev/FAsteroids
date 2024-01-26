@@ -29,6 +29,7 @@ namespace Game
 		sf::Vector2f position;
 		sf::Vector2f velocity;
 		sf::Angle angle;
+		sf::Angle rot_speed;
 	};
 
 	struct Bullet
