@@ -98,7 +98,6 @@ namespace Game
 				.position = { pos_x(rng), pos_y(rng) },
 				.velocity = { speed(rng), sf::degrees(angle(rng)) },
 				.angle = sf::degrees(angle(rng)),
-				.radius = 25.0f,
 			};
 		};
 
@@ -113,7 +112,6 @@ namespace Game
 				.position = UpdateObjectPosition(asteroid, dt),
 				.velocity = asteroid.velocity,
 				.angle = asteroid.angle,
-				.radius = asteroid.radius,
 			};
 		};
 
