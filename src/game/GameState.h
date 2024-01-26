@@ -28,6 +28,7 @@ namespace Game
 	{
 		sf::Vector2f position;
 		sf::Vector2f velocity;
+		sf::Angle angle;
 		float radius = 0.0f;
 	};
 

@@ -7,8 +7,8 @@
 struct Resources
 {
 	sf::ConvexShape player;
-	sf::CircleShape asteroid;
-	sf::RectangleShape bullet;
+	sf::ConvexShape asteroid;
+	sf::ConvexShape bullet;
 	sf::Font font;
 };
 

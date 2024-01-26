@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/System/Vector2.hpp>
+#include <array>
 
 using namespace sf::Literals;
 using namespace std::chrono_literals;
@@ -22,7 +23,6 @@ struct PlayerSettings
 struct AsteroidSettings
 {
 	ValueRange<float> speed;
-	ValueRange<float> radius;
 };
 
 struct BulletSettings
@@ -50,11 +50,49 @@ inline constexpr auto settings = Settings
 		.shoot_cooldown = 150ms,
 	},
 	.asteroid = {
-		.speed = { 0.0f, 50.0f },
-		.radius = { 20.0f, 30.0f },
+		.speed = { 10.0f, 50.0f },
 	},
 	.bullet = {
 		.speed = 320.0f,
 		.lifetime = 3s,
 	},
 };
+
+
+template<std::size_t N>
+consteval std::array<sf::Vector2f, N> ScaleShape(float scale, sf::Vector2f(&& arr)[N])
+{
+	std::array<sf::Vector2f, N> out;
+	for (std::size_t idx = 0; idx < N; ++idx) {
+		out[idx] = arr[idx] * scale;
+	}
+	return out;
+}
+
+inline constexpr auto PlayerShape = ScaleShape(15.0f, {
+	{  1.0f,  0.0f },
+	{ -0.5f, -0.6f },
+	{ -0.2f,  0.0f },
+	{ -0.5f,  0.6f },
+});
+
+inline constexpr auto BulletShape = ScaleShape(2.0f, {
+	{  1.0f,  1.0f },
+	{  1.0f, -1.0f },
+	{ -1.0f, -1.0f },
+	{ -1.0f,  1.0f },
+});
+
+inline constexpr auto AsteroidShape = ScaleShape(25.0f, {
+	{  0.0f,  1.0f },
+	{  0.5f,  0.9f },
+
+	{  1.0f,  0.0f },
+	{  0.6f, -0.6f },
+
+	{  0.0f, -1.0f },
+	{ -0.5f, -0.3f },
+
+	{ -1.0f,  0.0f },
+	{ -0.8f,  0.7f },
+});

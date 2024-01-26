@@ -1,46 +1,17 @@
 #include "Render.h"
 #include "Settings.h"
+#include "Utils.h"
 
 namespace
 {
-	sf::ConvexShape CreateConvexShape(const auto& points, float scale = 1.0f)
+	sf::ConvexShape CreateConvexShape(range_of<sf::Vector2f> auto&& points, sf::Color color)
 	{
-		sf::ConvexShape shape(std::size(points));
-		size_t idx = 0;
-		for (auto point : points) {
-			shape.setPoint(idx++, point * scale);
+		sf::ConvexShape shape(stdr::size(points));
+		for (auto [idx, point] : points | stdv::enumerate) {
+			shape.setPoint(idx, point);
 		}
+		shape.setFillColor(color);
 		return shape;
-	}
-
-	sf::ConvexShape CreatePlayerShape()
-	{
-		static constexpr std::array<sf::Vector2f, 4> PlayerPoints = { {
-			{  1.0f,  0.0f },
-			{ -0.5f, -0.6f },
-			{ -0.2f,  0.0f },
-			{ -0.5f,  0.6f },
-		} };
-
-		auto shape = CreateConvexShape(PlayerPoints, 15.0f);
-		shape.setFillColor(sf::Color::White);
-		return shape;
-	}
-
-	sf::CircleShape CreateAsteroidShape()
-	{
-		sf::CircleShape asteroid(1.0f, 12u);
-		asteroid.setFillColor(sf::Color::Blue);
-		asteroid.setOrigin({ 1.0f, 1.0f });
-		return asteroid;
-	}
-
-	sf::RectangleShape CreateBulletShape()
-	{
-		sf::RectangleShape bullet({ 4.0f, 4.0f });
-		bullet.setFillColor(sf::Color::White);
-		bullet.setOrigin({ 2.0f, 2.0f });
-		return bullet;
 	}
 
 	sf::Font LoadFont(const std::filesystem::path& path)
@@ -50,12 +21,11 @@ namespace
 		return font;
 	}
 
-	void Draw(sf::RenderTarget& target, const sf::Drawable& drawable, sf::Vector2f pos, float scale = 1.0f, sf::Angle angle = sf::degrees(0.0f))
+	void Draw(sf::RenderTarget& target, const sf::Drawable& drawable, sf::Vector2f pos, sf::Angle angle)
 	{
 		target.draw(drawable, { sf::Transform{}
 			.translate(pos)
 			.rotate(angle)
-			.scale({ scale, scale })
 		});
 	}
 
@@ -71,9 +41,9 @@ namespace
 Resources LoadResources()
 {
 	return {
-		.player = CreatePlayerShape(),
-		.asteroid = CreateAsteroidShape(),
-		.bullet = CreateBulletShape(),
+		.player = CreateConvexShape(PlayerShape, sf::Color::White),
+		.asteroid = CreateConvexShape(AsteroidShape, sf::Color::Blue),
+		.bullet = CreateConvexShape(BulletShape, sf::Color::White),
 		.font = LoadFont("res/AstroSpace.ttf"),
 	};
 }
@@ -81,14 +51,14 @@ Resources LoadResources()
 void Draw(sf::RenderWindow& out, const Game::State& state, const Resources& res)
 {
 	for (const auto& asteroid : state.asteroids) {
-		Draw(out, res.asteroid, asteroid.position, asteroid.radius);
+		Draw(out, res.asteroid, asteroid.position, asteroid.angle);
 	}
 
 	for (const auto& bullet : state.bullets) {
-		Draw(out, res.bullet, bullet.position);
+		Draw(out, res.bullet, bullet.position, sf::degrees(0.0f));
 	}
 
-	Draw(out, res.player, state.player.position, 1.0f, state.player.angle);
+	Draw(out, res.player, state.player.position, state.player.angle);
 }
 
 void Draw(sf::RenderWindow& window, const Menu::State& state, const Resources& res)
