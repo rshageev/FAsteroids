@@ -2,8 +2,10 @@
 #include "Settings.h"
 #include "Utils.h"
 #include "Collisions.h"
+#include "functional/GenerateView.h"
 
 #include <random>
+#include <functional>
 
 namespace Game
 {
@@ -83,6 +85,12 @@ namespace Game
 
 	/* Asteroids */
 
+	float Random(auto&& rng, float min, float max)
+	{
+		std::uniform_real_distribution<float> distr(min, max);
+		return distr(rng);
+	}
+
 	auto SpawnAsteroids(int count) -> Asteroids
 	{
 		std::random_device rand_device;
@@ -94,7 +102,7 @@ namespace Game
 		std::uniform_real_distribution angle(0.0f, 360.0f);
 		std::uniform_real_distribution rot_speed(settings.asteroid.rot_speed.min.asDegrees(), settings.asteroid.rot_speed.max.asDegrees());
 
-		auto spawn_asteroid = [&](int) -> Asteroid {
+		auto spawn_asteroid = [&]() -> Asteroid {
 			return {
 				.position = { pos_x(rng), pos_y(rng) },
 				.velocity = { speed(rng), sf::degrees(angle(rng)) },
@@ -103,7 +111,7 @@ namespace Game
 			};
 		};
 
-		return stdv::iota(0, count) | stdv::transform(spawn_asteroid) | stdr::to<std::vector>();
+		return views::generate(spawn_asteroid) | stdv::take(count) | stdr::to<std::vector>();
 	}
 
 	auto UpdateAsteroids(range_of<Asteroid> auto&& asteroids, const CollisionsData& cd, sf::Time dt)
