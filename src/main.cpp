@@ -8,23 +8,17 @@
 
 #include <functional>
 
-FrameData UpdateFrame(FrameData frame, const auto& frame_input)
+InputState UpdateInputState(InputState input, const auto& system_events)
 {
-    const auto& [events, dt] = frame_input;
-
-    for (const auto& event : events)
-    {
+    for (const auto& event : system_events) {
         if (event.type == sf::Event::KeyPressed) {
-            frame.keys.insert(event.key.code);
+            input.keys.insert(event.key.code);
         }
         if (event.type == sf::Event::KeyReleased) {
-            frame.keys.erase(event.key.code);
+            input.keys.erase(event.key.code);
         }
     }
-
-    frame.dt = dt;
-
-    return frame;
+    return input;
 }
 
 std::vector<sf::Event> PollEvents(sf::Window& window)
@@ -36,15 +30,15 @@ std::vector<sf::Event> PollEvents(sf::Window& window)
     return events;
 }
 
-auto GetFramesDeltaTimes()
+auto GetDeltaTimes()
 {
     return views::generate([clock = sf::Clock{}]() mutable { return clock.restart(); });
 }
 
-auto GetFramesInputEvents(sf::Window& window)
+auto GetSystemEvents(sf::Window& window)
 {
     auto close_not_requested = [](const auto& events) {
-        return stdr::find(events, sf::Event::Closed, &sf::Event::type) == stdr::end(events);
+        return !stdr::contains(events, sf::Event::Closed, &sf::Event::type);
     };
 
     return views::generate([&window]() { return PollEvents(window); })
@@ -53,16 +47,26 @@ auto GetFramesInputEvents(sf::Window& window)
 
 struct ProgramState
 {
+    std::unique_ptr<Resources> resources;
     AppState state;
-    FrameData frame;
+    InputState input;
+    int ret_code = 0;
 };
 
-ProgramState UpdateProgram(sf::RenderWindow& window, const Resources& resources, ProgramState program_state, const auto& frame_input)
+ProgramState InitProgram()
 {
-    program_state.frame = UpdateFrame(program_state.frame, frame_input);
-    program_state.state = Update(program_state.state, program_state.frame);
-    Draw(window, program_state.state, resources);
-    return program_state;
+    return {
+        .resources = std::make_unique<Resources>(LoadResources()),
+    };
+}
+
+ProgramState UpdateProgram(sf::RenderWindow& window, ProgramState&& ps, const auto& frame_input)
+{
+    const auto& [events, dt] = frame_input;
+    ps.input = UpdateInputState(ps.input, events);
+    ps.state = Update(ps.state, ps.input, dt);
+    Draw(window, ps.state, *ps.resources);
+    return ps;
 }
 
 int main()
@@ -70,19 +74,11 @@ int main()
     auto window = sf::RenderWindow{ sf::VideoMode{ settings.window_size }, "Asteroids" };
     window.setVerticalSyncEnabled(true);
 
-    const auto resources = LoadResources();
-
-    auto frames = stdv::zip(
-        GetFramesInputEvents(window),
-        GetFramesDeltaTimes());
-
-    [[maybe_unused]] const auto final_state = stdr::fold_left(
-        frames,
-        ProgramState{},
+    return stdr::fold_left(
+        stdv::zip(GetSystemEvents(window), GetDeltaTimes()),
+        InitProgram(),
         [&](auto&& state, const auto& frame) {
-            return UpdateProgram(window, resources, state, frame);
-        });
-
-    window.close();
-    return 0;
+            return UpdateProgram(window, std::move(state), frame);
+        }
+    ).ret_code;
 }

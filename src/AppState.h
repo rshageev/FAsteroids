@@ -19,4 +19,10 @@ struct FrameData
     sf::Time dt;
 };
 
+struct InputState
+{
+    // pressed keys
+    std::set<sf::Keyboard::Key> keys;
+};
+
 using AppState = std::variant<Menu::State, Game::State>;

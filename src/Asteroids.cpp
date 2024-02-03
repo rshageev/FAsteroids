@@ -18,7 +18,7 @@ AppState GoToMenu()
     return Menu::State{};
 }
 
-AppState Update(const AppState& state, const FrameData& frame)
+AppState Update(const AppState& state, const InputState& input, sf::Time dt)
 {
-    return std::visit([&](const auto& st) { return Update(st, frame); }, state);
+    return std::visit([&, dt](const auto& st) { return Update(st, input, dt); }, state);
 }

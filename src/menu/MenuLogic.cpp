@@ -3,8 +3,8 @@
 
 namespace Menu
 {
-	AppState Update(const State& state, const FrameData& frame)
+	AppState Update(const State& state, const InputState& input, sf::Time)
 	{
-		return frame.keys.empty() ? state : StartGame();
+		return input.keys.empty() ? state : StartGame();
 	}
 }

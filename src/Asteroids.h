@@ -5,4 +5,4 @@
 AppState StartGame();
 AppState GoToMenu();
 
-AppState Update(const AppState& state, const FrameData& frame);
+AppState Update(const AppState& state, const InputState& input, sf::Time dt);

@@ -38,13 +38,13 @@ namespace Game
 
 	/* User input */
 
-	auto GetUserInput(const FrameData& frame)
+	auto TranslateUserInput(const InputState& input)
 	{
 		return UserInput{
-			.turn_left = frame.keys.contains(sf::Keyboard::Key::Left),
-			.turn_right = frame.keys.contains(sf::Keyboard::Key::Right),
-			.accelerate = frame.keys.contains(sf::Keyboard::Key::Up),
-			.shoot = frame.keys.contains(sf::Keyboard::Key::Space),
+			.turn_left = input.keys.contains(sf::Keyboard::Key::Left),
+			.turn_right = input.keys.contains(sf::Keyboard::Key::Right),
+			.accelerate = input.keys.contains(sf::Keyboard::Key::Up),
+			.shoot = input.keys.contains(sf::Keyboard::Key::Space),
 		};
 	}
 	
@@ -181,18 +181,18 @@ namespace Game
 
 	/* Whole game state */
 
-	AppState Update(const State& prev_state, const FrameData& frame)
+	AppState Update(const State& prev_state, const InputState& input_state, sf::Time dt)
 	{
-		const auto input = GetUserInput(frame);
+		const auto input = TranslateUserInput(input_state);
 
 		const auto collisions = CalcAllCollisions(prev_state);
 
 		return State
 		{
-			.player = UpdatePlayer(prev_state.player, input, frame.dt),
-			.asteroids = UpdateAsteroids(prev_state.asteroids, collisions, frame.dt) | stdr::to<std::vector>(),
+			.player = UpdatePlayer(prev_state.player, input, dt),
+			.asteroids = UpdateAsteroids(prev_state.asteroids, collisions, dt) | stdr::to<std::vector>(),
 			.bullets = ShootBullets(
-				UpdateBullets(prev_state.bullets, collisions, frame.dt),
+				UpdateBullets(prev_state.bullets, collisions, dt),
 				prev_state.player, input),
 		};
 	}

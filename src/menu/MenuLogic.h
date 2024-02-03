@@ -4,5 +4,5 @@
 
 namespace Menu
 {
-	AppState Update(const State& state, const FrameData& frame);
+	AppState Update(const State& state, const InputState& input, sf::Time dt);
 }
