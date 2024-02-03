@@ -3,14 +3,17 @@
 #include "Asteroids.h"
 #include "Render.h"
 #include "Settings.h"
+#include "Utils.h"
+#include "functional/GenerateView.h"
 
-FrameData UpdateFrame(FrameData frame, sf::Window& window, sf::Clock& clock)
+#include <functional>
+
+FrameData UpdateFrame(FrameData frame, const auto& frame_input)
 {
-    for (auto event = sf::Event{}; window.pollEvent(event);)
+    const auto& [events, dt] = frame_input;
+
+    for (const auto& event : events)
     {
-        if (event.type == sf::Event::Closed) {
-            window.close();
-        }
         if (event.type == sf::Event::KeyPressed) {
             frame.keys.insert(event.key.code);
         }
@@ -19,9 +22,47 @@ FrameData UpdateFrame(FrameData frame, sf::Window& window, sf::Clock& clock)
         }
     }
 
-    frame.dt = clock.restart();
+    frame.dt = dt;
 
     return frame;
+}
+
+std::vector<sf::Event> PollEvents(sf::Window& window)
+{
+    std::vector<sf::Event> events;
+    for (auto event = sf::Event{}; window.pollEvent(event);) {
+        events.push_back(event);
+    }
+    return events;
+}
+
+auto GetFramesDeltaTimes()
+{
+    return views::generate([clock = sf::Clock{}]() mutable { return clock.restart(); });
+}
+
+auto GetFramesInputEvents(sf::Window& window)
+{
+    auto close_not_requested = [](const auto& events) {
+        return stdr::find(events, sf::Event::Closed, &sf::Event::type) == stdr::end(events);
+    };
+
+    return views::generate([&window]() { return PollEvents(window); })
+        | stdv::take_while(close_not_requested);
+}
+
+struct ProgramState
+{
+    AppState state;
+    FrameData frame;
+};
+
+ProgramState UpdateProgram(sf::RenderWindow& window, const Resources& resources, ProgramState program_state, const auto& frame_input)
+{
+    program_state.frame = UpdateFrame(program_state.frame, frame_input);
+    program_state.state = Update(program_state.state, program_state.frame);
+    Draw(window, program_state.state, resources);
+    return program_state;
 }
 
 int main()
@@ -31,16 +72,17 @@ int main()
 
     const auto resources = LoadResources();
 
-    auto state = AppState{};
-    auto frame = FrameData{};
-    sf::Clock clock;
+    auto frames = stdv::zip(
+        GetFramesInputEvents(window),
+        GetFramesDeltaTimes());
 
-    while (window.isOpen())
-    {
-        frame = UpdateFrame(frame, window, clock);
-        state = Update(state, frame);
-        Draw(window, state, resources);
-    }
+    [[maybe_unused]] const auto final_state = stdr::fold_left(
+        frames,
+        ProgramState{},
+        [&](auto&& state, const auto& frame) {
+            return UpdateProgram(window, resources, state, frame);
+        });
 
+    window.close();
     return 0;
 }
