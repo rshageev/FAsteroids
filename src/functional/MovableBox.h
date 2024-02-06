@@ -3,9 +3,7 @@
 /*
 Wraps move constructible value, enabling move assignments as well.
 Used for holding function object, when implementing views
-(as lambdas are no move assignable, but the view containing them is required to be)..
-
-
+(as lambdas are not move assignable, but the view containing them is required to be)
 */
 template<class T> requires std::is_move_constructible_v<T>
 class movable_box
@@ -27,7 +25,13 @@ public:
         }
     }
 
-    constexpr movable_box(movable_box&&) = default;
+    constexpr movable_box(movable_box&& rhs)
+        : engaged(rhs.engaged)
+    {
+        if (engaged) {
+            std::construct_at(std::addressof(value), std::forward<T>(rhs.value));
+        }
+    };
 
     constexpr movable_box& operator=(movable_box&& rhs) {
         if (std::addressof(rhs) != this) {
@@ -36,7 +40,7 @@ public:
                 engaged = false;
             }
             if (rhs.engaged) {
-                std::construct_at(std::addressof(value), std::forward<T>(rhs));
+                std::construct_at(std::addressof(value), std::forward<T>(rhs.value));
                 engaged = true;
             }
         }
@@ -56,6 +60,8 @@ public:
     }
 
 private:
-    std::remove_cv_t<T> value;
+    union {
+        std::remove_cv_t<T> value;
+    };
     bool engaged;
 };
