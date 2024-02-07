@@ -1,4 +1,4 @@
-#include <SFML/Graphics.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
 
 #include "Asteroids.h"
 #include "Render.h"
@@ -6,79 +6,74 @@
 #include "Utils.h"
 #include "functional/GenerateView.h"
 
-#include <functional>
-
-InputState UpdateInputState(InputState input, const auto& system_events)
+struct System
 {
-    for (const auto& event : system_events) {
-        if (event.type == sf::Event::KeyPressed) {
-            input.keys.insert(event.key.code);
-        }
-        if (event.type == sf::Event::KeyReleased) {
-            input.keys.erase(event.key.code);
-        }
-    }
-    return input;
-}
-
-std::vector<sf::Event> PollEvents(sf::Window& window)
-{
-    std::vector<sf::Event> events;
-    for (auto event = sf::Event{}; window.pollEvent(event);) {
-        events.push_back(event);
-    }
-    return events;
-}
-
-auto GetDeltaTimes()
-{
-    return views::generate([clock = sf::Clock{}]() mutable { return clock.restart(); });
-}
-
-auto GetSystemEvents(sf::Window& window)
-{
-    auto close_not_requested = [](const auto& events) {
-        return !stdr::contains(events, sf::Event::Closed, &sf::Event::type);
+public:
+    struct State
+    {
+        sf::RenderWindow* window;
+        const InputState* input;
+        sf::Time dt;
+        bool app_closed;
     };
 
-    return views::generate([&window]() { return PollEvents(window); })
-        | stdv::take_while(close_not_requested);
+    System()
+    {
+        window = std::make_unique<sf::RenderWindow>(sf::VideoMode{ settings.window_size }, "Asteroids");
+        window->setVerticalSyncEnabled(true);
+    }
+
+    auto operator()()
+    {
+        for (auto event = sf::Event{}; window->pollEvent(event);) {
+            switch (event.type) {
+            case sf::Event::KeyPressed:
+                input.keys.insert(event.key.code); break;
+            case sf::Event::KeyReleased:
+                input.keys.erase(event.key.code); break;
+            case sf::Event::Closed:
+                app_closed = true; break;
+            }
+        }
+
+        return State{ window.get(), &input, clock.restart(), app_closed };
+    }
+
+    static bool IsRunning(const State& st) { return !st.app_closed; }
+private:
+    std::unique_ptr<sf::RenderWindow> window;
+    InputState input;
+    sf::Clock clock;
+    bool app_closed = false;
+};
+
+auto GetSystemState()
+{
+    return views::generate(System{}) | stdv::take_while(System::IsRunning);
 }
 
 struct ProgramState
 {
     std::unique_ptr<Resources> resources;
     AppState state;
-    InputState input;
-    int ret_code = 0;
+    int return_code = 0;
 };
 
-ProgramState InitProgram()
+ProgramState InitApp()
 {
     return {
         .resources = std::make_unique<Resources>(LoadResources()),
     };
 }
 
-ProgramState UpdateProgram(sf::RenderWindow& window, ProgramState&& ps, const auto& frame_input)
+ProgramState UpdateApp(ProgramState&& app, System::State system)
 {
-    const auto& [events, dt] = frame_input;
-    ps.input = UpdateInputState(ps.input, events);
-    ps.state = Update(ps.state, ps.input, dt);
-    Draw(window, ps.state, *ps.resources);
-    return ps;
+    app.state = Update(app.state, *system.input, system.dt);
+    Draw(*system.window, app.state, *app.resources);
+    return app;
 }
 
 int main()
 {
-    auto window = sf::RenderWindow{ sf::VideoMode{ settings.window_size }, "Asteroids" };
-    window.setVerticalSyncEnabled(true);
-
-    return stdr::fold_left(
-        stdv::zip(GetSystemEvents(window), GetDeltaTimes()),
-        InitProgram(),
-        [&](auto&& state, const auto& frame) {
-            return UpdateProgram(window, std::move(state), frame);
-        }
-    ).ret_code;
+    return stdr::fold_left(GetSystemState(), InitApp(), UpdateApp).return_code;
 }
