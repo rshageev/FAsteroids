@@ -2,7 +2,7 @@
 
 #include "AppState.h"
 
-AppState StartGame();
-AppState GoToMenu();
+GameState StartGame();
+GameState GoToMenu();
 
-AppState Update(const AppState& state, const InputState& input, sf::Time dt);
+GameState Update(const GameState& state, const InputState& input, sf::Time dt);

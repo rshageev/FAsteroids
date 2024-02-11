@@ -4,5 +4,5 @@
 
 namespace Menu
 {
-	AppState Update(const State& state, const InputState& input, sf::Time dt);
+	GameState Update(const State& state, const InputState& input, sf::Time dt);
 }

@@ -68,7 +68,7 @@ void Draw(sf::RenderWindow& window, const Menu::State& state, const Resources& r
 	PrintText(window, res.font, "Press any key to play", { 100.0f, 250.0f }, 24, sf::Color(200, 200, 200));
 }
 
-void Draw(sf::RenderWindow& window, const AppState& state, const Resources& res)
+void Draw(sf::RenderWindow& window, const GameState& state, const Resources& res)
 {
 	window.clear();
 

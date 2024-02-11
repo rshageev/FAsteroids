@@ -52,21 +52,21 @@ auto GetSystemState()
     return views::generate(System{}) | stdv::take_while(System::IsRunning);
 }
 
-struct ProgramState
+struct AppState
 {
     std::unique_ptr<Resources> resources;
-    AppState state;
+    GameState state;
     int return_code = 0;
 };
 
-ProgramState InitApp()
+AppState InitApp()
 {
     return {
         .resources = std::make_unique<Resources>(LoadResources()),
     };
 }
 
-ProgramState UpdateApp(ProgramState&& app, System::State system)
+AppState UpdateApp(AppState&& app, System::State system)
 {
     app.state = Update(app.state, *system.input, system.dt);
     Draw(*system.window, app.state, *app.resources);

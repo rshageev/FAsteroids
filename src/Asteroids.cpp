@@ -3,7 +3,7 @@
 #include "game/GameLogic.h"
 #include "menu/MenuLogic.h"
 
-AppState StartGame()
+GameState StartGame()
 {
     return Game::State{
         .player = {
@@ -13,12 +13,12 @@ AppState StartGame()
     };
 }
 
-AppState GoToMenu()
+GameState GoToMenu()
 {
     return Menu::State{};
 }
 
-AppState Update(const AppState& state, const InputState& input, sf::Time dt)
+GameState Update(const GameState& state, const InputState& input, sf::Time dt)
 {
     return std::visit([&, dt](const auto& st) { return Update(st, input, dt); }, state);
 }

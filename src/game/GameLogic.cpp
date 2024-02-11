@@ -181,7 +181,7 @@ namespace Game
 
 	/* Whole game state */
 
-	AppState Update(const State& prev_state, const InputState& input_state, sf::Time dt)
+	GameState Update(const State& prev_state, const InputState& input_state, sf::Time dt)
 	{
 		const auto input = TranslateUserInput(input_state);
 

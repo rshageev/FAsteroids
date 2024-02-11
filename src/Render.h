@@ -14,4 +14,4 @@ struct Resources
 
 Resources LoadResources();
 
-void Draw(sf::RenderWindow& out, const AppState& state, const Resources& res);
+void Draw(sf::RenderWindow& out, const GameState& state, const Resources& res);
