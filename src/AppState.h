@@ -8,10 +8,4 @@
 #include "game/GameState.h"
 #include "menu/MenuState.h"
 
-struct InputState
-{
-    // pressed keys
-    std::set<sf::Keyboard::Key> keys;
-};
-
 using GameState = std::variant<Menu::State, Game::State>;

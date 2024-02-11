@@ -12,6 +12,7 @@ FetchContent_MakeAvailable(SFML)
 
 add_executable(Asteroids
     src/main.cpp
+    src/System.cpp
     src/Asteroids.cpp
     src/Render.cpp
     src/game/GameLogic.cpp

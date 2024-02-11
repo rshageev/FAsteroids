@@ -3,6 +3,8 @@
 #include <ranges>
 #include <algorithm>
 
+#include <SFML/System/Vector2.hpp>
+
 namespace stdr = std::ranges;
 namespace stdv = std::views;
 
