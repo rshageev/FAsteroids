@@ -15,17 +15,26 @@ System::System(System&&) = default;
 
 System::~System() = default;
 
+template<class... Ts>
+struct overloads : Ts... { using Ts::operator()...; };
+
 System::State System::operator()()
 {
-    for (auto event = sf::Event{}; window->pollEvent(event);) {
-        switch (event.type) {
-        case sf::Event::KeyPressed:
-            input.keys.insert(event.key.code); break;
-        case sf::Event::KeyReleased:
-            input.keys.erase(event.key.code); break;
-        case sf::Event::Closed:
-            app_closed = true; break;
-        }
+    const auto visitor = overloads{
+        [this](const sf::Event::KeyPressed& event) {
+            input.keys.insert(event.code);
+        },
+        [this](const sf::Event::KeyReleased& event) {
+            input.keys.erase(event.code);
+        },
+        [this](const sf::Event::Closed) {
+            app_closed = true;
+        },
+        [](const auto& event) {}
+    };
+
+    while (const auto event = window->pollEvent()) {
+        event->visit(visitor);
     }
 
     return State{ window.get(), &input, clock.restart(), app_closed };

@@ -17,7 +17,7 @@ namespace
 	sf::Font LoadFont(const std::filesystem::path& path)
 	{
 		sf::Font font;
-		[[maybe_unused]] const bool ok = font.loadFromFile(path);
+		[[maybe_unused]] const bool ok = font.openFromFile(path);
 		return font;
 	}
 
